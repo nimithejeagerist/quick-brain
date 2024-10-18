@@ -8,7 +8,8 @@ const openai = new OpenAI({
 const systemPrompt = `
 You are a flashcard creator. Create exactly 10 flashcards from the provided queries, you are free to make whatever you like.
 Each flashcard should have a question on the front and an answer on the back.
-Both front and back should be one sentence long.
+The front should be one sentence long.
+The back should have full answers but reduced to your discretion, something a person can memorize and read in under 30 seconds.
 Return the result in a JSON format:
 {
   "flashcards":[
