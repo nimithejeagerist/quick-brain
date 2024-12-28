@@ -11,6 +11,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import {
+  NotebookPen,
   ChevronDownIcon,
   Type,
   Image,
@@ -66,6 +67,17 @@ export default function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+              <DropdownMenuItem
+                  onClick={handleMenuClose}
+                  className="w-full p-0"
+                >
+                  <NotebookPen className="pl-2 h-4 w-6" />
+                  <Link href="/create-flashcards" passHref className="w-full">
+                    <p className="block w-full py-2 pl-2 text-sm font-medium antialiased">
+                      From scratch
+                    </p>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleMenuClose}
                   className="w-full p-0"
