@@ -74,7 +74,7 @@ export default function Navbar() {
                   <NotebookPen className="pl-2 h-4 w-6" />
                   <Link href="/create-flashcards" passHref className="w-full">
                     <p className="block w-full py-2 pl-2 text-sm font-medium antialiased">
-                      From scratch
+                      Create
                     </p>
                   </Link>
                 </DropdownMenuItem>
@@ -171,4 +171,4 @@ export default function Navbar() {
       <hr className="border-t-2 border-gray-200 mt-1 w-3/4 mx-auto" />
     </header>
   );
-}
+};
