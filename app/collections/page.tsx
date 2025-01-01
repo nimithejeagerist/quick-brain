@@ -26,6 +26,7 @@ import {
   DocumentData,
 } from "firebase/firestore";
 import Link from "next/link";
+import { Pencil, Trash2, Share } from "lucide-react";
 
 interface Collection {
   name: string;
@@ -109,7 +110,6 @@ export default function CollectionsPage() {
       const newCollectionRef = collection(userDocRef, newCollectionName);
 
       const colSnap = await getDocs(oldCollectionRef);
-      
 
       // Copy documents to the new collection
       colSnap.forEach((document) => {
@@ -192,6 +192,46 @@ export default function CollectionsPage() {
     }
   };
 
+  const handleShareCollection = async () => {
+    if (!user || !selectedCollection) return;
+
+    try {
+      const userDocRef = doc(collection(db, "users"), user.id);
+      const docSnap = await getDoc(userDocRef);
+
+      if (docSnap.exists()) {
+        const collectionRef = collection(userDocRef, selectedCollection);
+        const colSnap = await getDocs(collectionRef);
+
+        // Create a reference to the hub collection and the specific user's subcollection
+        const hubRef = collection(db, "hub");
+        const userHubRef = doc(hubRef, user.id);
+
+        // Get all flashcards from the collection
+        const flashcardsData = colSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Create a new document in the hub with the collection name
+        const collectionInHub = collection(userHubRef, selectedCollection);
+
+        // Add each flashcard to the hub collection
+        const batch = writeBatch(db);
+
+        flashcardsData.forEach((flashcard) => {
+          const newDocRef = doc(collectionInHub);
+          batch.set(newDocRef, flashcard);
+        });
+
+        await batch.commit();
+        alert("Collection shared successfully to the hub!");
+      }
+    } catch (error) {
+      console.error("Error sharing collection:", error);
+    }
+  };
+
   return (
     <Container maxWidth="sm">
       <Box
@@ -205,7 +245,11 @@ export default function CollectionsPage() {
           alignItems: "center",
         }}
       >
-        {collections.length === 0 ? (
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <div className="w-8 h-8 border-4 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
+          </Box>
+        ) : collections.length === 0 ? (
           <>
             <Typography
               variant="h3"
@@ -221,12 +265,11 @@ export default function CollectionsPage() {
           </>
         ) : (
           <>
-            <Typography
-              variant="h3"
+            <h3
               className="mb-6 scroll-m-20 antialiased text-4xl font-bold tracking-tight lg:text-5xl"
             >
               Your Collections
-            </Typography>
+            </h3>
             <List sx={{ width: "100%", mt: 2 }}>
               {collections.map((col, index) => (
                 <ListItem
@@ -239,29 +282,40 @@ export default function CollectionsPage() {
                   }}
                 >
                   <Link href={`/flashcards/${col.name}`} passHref>
-                    <ListItemText
-                      primary={`${col.name} (${col.questionCount} questions)`}
-                    />
+                    <p className="text-base antialiased">
+                      {`${col.name} (${col.questionCount} questions)`}
+                    </p>
                   </Link>
-                  <Box>
+                  <Box className="flex items-center gap-2">
                     <IconButton
                       edge="end"
                       aria-label="edit"
                       onClick={() => handleOpenModal(col.name)}
-                      className="dark:text-slate-300"
+                      className="text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
                     >
-                      <Edit />
+                      <Pencil />
                     </IconButton>
                     <IconButton
                       edge="end"
                       aria-label="delete"
                       onClick={() => {
-                        setSelectedCollection(col.name); // Set the collection name
-                        handleDeleteCollection(); // Then delete the collection
+                        setSelectedCollection(col.name);
+                        handleDeleteCollection();
                       }}
-                      className="dark:text-slate-300"
+                      className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                     >
-                      <Delete />
+                      <Trash2 />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      aria-label="share to hub"
+                      onClick={() => {
+                        setSelectedCollection(col.name);
+                        handleShareCollection();
+                      }}
+                      className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                    >
+                      <Share />
                     </IconButton>
                   </Box>
                 </ListItem>
@@ -282,7 +336,7 @@ export default function CollectionsPage() {
             width: "400px",
           }}
         >
-          <Typography variant="h6">Edit or Delete Collection</Typography>
+          <h6>Edit or Delete Collection</h6>
           <TextField
             label="New Collection Name"
             fullWidth
