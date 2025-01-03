@@ -20,6 +20,7 @@ import {
   collection,
   doc,
   getDoc,
+  setDoc,
   getDocs,
   updateDoc,
   writeBatch,
@@ -31,6 +32,7 @@ import { Pencil, Trash2, Share } from "lucide-react";
 interface Collection {
   name: string;
   questionCount?: number;
+  description?: string;
 }
 
 export default function CollectionsPage() {
@@ -194,37 +196,35 @@ export default function CollectionsPage() {
 
   const handleShareCollection = async () => {
     if (!user || !selectedCollection) return;
-
+  
     try {
       const userDocRef = doc(collection(db, "users"), user.id);
       const docSnap = await getDoc(userDocRef);
-
+  
       if (docSnap.exists()) {
         const collectionRef = collection(userDocRef, selectedCollection);
         const colSnap = await getDocs(collectionRef);
+  
+        if (colSnap.empty) {
+          alert("The selected collection has no flashcards to share!");
+          return;
+        }
 
-        // Create a reference to the hub collection and the specific user's subcollection
-        const hubRef = collection(db, "hub");
-        const userHubRef = doc(hubRef, user.id);
-
-        // Get all flashcards from the collection
-        const flashcardsData = colSnap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // Create a new document in the hub with the collection name
-        const collectionInHub = collection(userHubRef, selectedCollection);
-
-        // Add each flashcard to the hub collection
-        const batch = writeBatch(db);
-
-        flashcardsData.forEach((flashcard) => {
-          const newDocRef = doc(collectionInHub);
-          batch.set(newDocRef, flashcard);
+        // Get the collection description from the user's collections
+        const collections = docSnap.data().flashcards || [];
+        const collectionData = collections.find((c: Collection) => c.name === selectedCollection);
+        const description = collectionData?.description || 'No description provided';
+  
+        // Save metadata to the hub collection
+        const hubRef = doc(collection(db, "hub"), `${user.id}_${selectedCollection}`);
+        await setDoc(hubRef, {
+          userId: user.id,
+          collectionName: selectedCollection,
+          description: description,
+          flashcardCount: colSnap.size,
+          sharedAt: new Date(),
         });
-
-        await batch.commit();
+  
         alert("Collection shared successfully to the hub!");
       }
     } catch (error) {

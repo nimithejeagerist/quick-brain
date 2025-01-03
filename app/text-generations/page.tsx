@@ -23,6 +23,7 @@ export default function GenerateWithTextPage() {
   const [text, setText] = useState("");
   const [flashcards, setFlashcards] = useState([]);
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = async () => {
     setFlashcards([]);
@@ -62,11 +63,11 @@ export default function GenerateWithTextPage() {
             alert("Flashcard set with the same name already exists");
             return;
           } else {
-            collections.push({ name });
+            collections.push({ name, description });
             batch.set(userDocRef, { flashcards: collections }, { merge: true });
           }
         } else {
-          batch.set(userDocRef, { flashcards: [{ name }] });
+          batch.set(userDocRef, { flashcards: [{ name, description }] });
         }
 
         const flashcardRef = collection(userDocRef, name);
@@ -145,6 +146,12 @@ export default function GenerateWithTextPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter a name for the collection"
+              className="mb-4 ring ring-violet-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased"
+            />
+            <TextArea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter a description for the collection"
               className="mb-4 ring ring-violet-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased"
             />
             <Button

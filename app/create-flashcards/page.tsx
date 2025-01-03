@@ -75,7 +75,7 @@ export default function CreateFlashcards() {
 
     const batch = writeBatch(db);
     const userDocRef = doc(collection(db, "users"), user.id);
-
+    
     try {
       const docSnap = await getDoc(userDocRef);
 

@@ -125,6 +125,14 @@ export default function Navbar() {
                 <p className="text-base font-medium antialiased">Pricing</p>
               </Link>
             </Button>
+            <Button
+              variant="ghost"
+              className="hover:bg-transparent hover:text-current ml-[-4px]"
+            >
+              <Link href="/hub" passHref>
+                <p className="text-base font-medium antialiased">Hub</p>
+              </Link>
+            </Button>
           </div>
         </div>
 
