@@ -11,6 +11,7 @@ type FlashCardFormProps = {
   id: number;
   question: string;
   answer: string;
+  isDeleting?: boolean;
 };
 
 // Format for saving the flashcards
@@ -126,50 +127,108 @@ export default function CreateFlashcards() {
   return (
     <div className="relative flex flex-col justify-center mt-10 items-center">
       {isLoading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50 animate-fadeIn">
           <div className="flex flex-col text-center items-center">
-            <div className="loader border-t-4 border-white rounded-full w-16 h-16 animate-spin"></div>
-            <p className="mt-3 text-white text-base 2xl:text-lg antialiased">
+            <div className="loader border-t-4 border-white rounded-full w-16 h-16"></div>
+            <p className="mt-3 text-white text-base 2xl:text-lg antialiased animate-pulse">
               Saving... {progress}%
             </p>
           </div>
         </div>
       )}
 
-      <h3 className="mb-6 scroll-m-20 antialiased text-4xl font-bold tracking-tight lg:text-5xl">
-        Create Flashcards
+      <h3 className="mb-8 scroll-m-20 antialiased text-4xl font-bold tracking-tight 2xl:text-5xl bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-transparent animate-fadeIn">
+        Create Your Flashcards
       </h3>
-      <input
-        className="my-5 flex-1 peer w-5/12 bg-transparent border-b-2 placeholder-zinc-500 dark:placeholder-slate-300 border-zinc-500 dark:border-slate-300  dark:text-white focus:outline-none focus:ring-0 focus:border-zinc-900 dark:focus:border-white antialiased"
-        value={name}
-        placeholder="Enter a name for your flashcard set"
-        onChange={(e) => setName(e.target.value)}
-      />
-      {flashcards.map((card, index) => (
-        <FlashcardForm
-          key={card.id}
-          id={index}
-          question={card.question}
-          answer={card.answer}
-          onUpdate={updateFlashcard}
-          onDelete={deleteFlashcard}
+
+      <div className="w-5/12 mb-8 fade-in-up">
+        <input
+          className="w-full bg-transparent border-b-2 placeholder-zinc-500 dark:placeholder-slate-300 border-zinc-500 dark:border-slate-300 dark:text-white focus:outline-none focus:ring-0 focus:border-zinc-900 dark:focus:border-white antialiased transition-all duration-300"
+          value={name}
+          placeholder="Enter a name for your flashcard set"
+          onChange={(e) => setName(e.target.value)}
         />
-      ))}
+        {name && (
+          <p className="mt-2 text-sm text-zinc-500 dark:text-slate-400 animate-fadeIn">
+            Creating set: {name}
+          </p>
+        )}
+      </div>
+
+      <div className="w-full space-y-4">
+        {flashcards.map((card, index) => (
+          <div
+            key={card.id}
+            className="transform transition-all duration-300 animate-fadeIn"
+            style={{
+              animation: `${card.isDeleting ? 'fadeOutLeft 0.3s ease-out forwards' : 'fadeInRight 0.3s ease-out'}`
+            }}
+          >
+            <FlashcardForm
+              id={index}
+              question={card.question}
+              answer={card.answer}
+              onUpdate={updateFlashcard}
+              onDelete={(id) => {
+                setFlashcards(cards => 
+                  cards.map(card => 
+                    card.id === id ? { ...card, isDeleting: true } : card
+                  )
+                );
+                setTimeout(() => deleteFlashcard(id), 300);
+              }}
+            />
+          </div>
+        ))}
+      </div>
       <div ref={dummyRef} />
-      <div className="flex flex-row gap-4 mt-5">
+
+      <div className="flex flex-row gap-4 mt-8 mb-12">
         <button
           onClick={addFlashcard}
-          className="px-4 py-2 dark:bg-slate-100 dark:text-black bg-black text-white rounded-md hover:scale-105 transition-transform duration-300"
+          className="group px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium"
         >
-          Add Flashcard
+          <span className="flex items-center">
+            Add Card 
+            <span className="inline-block transition-transform duration-300 group-hover:rotate-90">+</span>
+          </span>
         </button>
         <button
           onClick={saveFlashcards}
-          className="px-4 py-2 dark:bg-slate-100 dark:text-black bg-black text-white rounded-md hover:scale-105 transition-transform duration-300"
+          disabled={!name || flashcards.every(card => !card.question.trim() && !card.answer.trim())}
+          className={`px-6 py-3 rounded-lg shadow-md font-medium transform transition-all duration-300
+            ${!name || flashcards.every(card => !card.question.trim() && !card.answer.trim())
+              ? 'bg-gray-400 cursor-not-allowed opacity-60'
+              : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:scale-105'
+            } text-white`}
         >
-          Save Flashcard
+          {!name ? 'Name Required' : 'Save Collection'}
         </button>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeOutLeft {
+          from {
+            opacity: 1;
+            transform: translateX(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+        }
+        
+        @keyframes fadeInRight {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -30,153 +30,104 @@ export default function Navbar() {
   };
 
   return (
-    <header className="bg-transparent">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4 relative">
-        <div>
-          <Button
-            variant="ghost"
-            className="hover:bg-transparent hover:text-current"
-          >
-            <Link href="/" passHref>
-              <p className="text-2xl font-bold antialiased">QuickBrain</p>
-            </Link>
-          </Button>
-        </div>
+    <header className="bg-white dark:bg-zinc-900">
+      <nav className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex-shrink-0">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-100 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+              QuickBrain
+            </h1>
+          </Link>
 
-        {/* Centered Section */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            className="hover:bg-transparent hover:text-current"
-          >
-            <Link href="/collections" passHref>
-              <p className="text-base font-medium antialiased">Collections</p>
+          {/* Main Navigation */}
+          <div className="flex items-center gap-8">
+            <Link 
+              href="/collections"
+              className="text-gray-700 dark:text-zinc-300 hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors"
+            >
+              Collections
             </Link>
-          </Button>
-          <div className="flex items-center">
+
             <DropdownMenu open={open} onOpenChange={setOpen}>
-              <DropdownMenuTrigger asChild className="focus:bg-transparent">
-                <Button
-                  variant="ghost"
-                  className="border-hidden hover:bg-transparent hover-text-current"
-                >
-                  <p className="text-base font-medium antialiased">
-                    Generations
-                  </p>
-                  <ChevronDownIcon className="mx-1 w-5" />
-                </Button>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 dark:text-zinc-300 hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors">
+                Generations
+                <ChevronDownIcon className="w-4 h-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-              <DropdownMenuItem
-                  onClick={handleMenuClose}
-                  className="w-full p-0"
-                >
-                  <NotebookPen className="pl-2 h-4 w-6" />
-                  <Link href="/create-flashcards" passHref className="w-full">
-                    <p className="block w-full py-2 pl-2 text-sm font-medium antialiased">
-                      Create
-                    </p>
-                  </Link>
+              <DropdownMenuContent className="w-48">
+                <DropdownMenuItem onClick={handleMenuClose} className="py-2">
+                  <NotebookPen className="mr-2 h-4 w-4" />
+                  <Link href="/create-flashcards" className="flex-1">Create</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleMenuClose}
-                  className="w-full p-0"
-                >
-                  <Type className="pl-2 h-4 w-6" />
-                  <Link href="/text-generations" passHref className="w-full">
-                    <p className="block w-full py-2 pl-2 text-sm font-medium antialiased">
-                      Text
-                    </p>
-                  </Link>
+                <DropdownMenuItem onClick={handleMenuClose} className="py-2">
+                  <Type className="mr-2 h-4 w-4" />
+                  <Link href="/text-generations" className="flex-1">Text</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleMenuClose}
-                  className="w-full p-0"
-                >
-                  <Image className="pl-2 h-4 w-6" />
-                  <Link href="/image-generations" passHref className="w-full">
-                    <p className="block w-full py-2 pl-2 text-sm font-medium antialiased">
-                      Image
-                    </p>
-                  </Link>
+                <DropdownMenuItem onClick={handleMenuClose} className="py-2">
+                  <Image className="mr-2 h-4 w-4" />
+                  <Link href="/image-generations" className="flex-1">Image</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleMenuClose}
-                  className="w-full p-0"
-                >
-                  <FileText className="pl-2 h-4 w-6" />
-                  <Link
-                    href="/document-generations"
-                    passHref
-                    className="w-full"
-                  >
-                    <p className="block w-full py-2 pl-2 text-sm font-medium antialiased">
-                      Document
-                    </p>
-                  </Link>
+                <DropdownMenuItem onClick={handleMenuClose} className="py-2">
+                  <FileText className="mr-2 h-4 w-4" />
+                  <Link href="/document-generations" className="flex-1">Document</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button
-              variant="ghost"
-              className="hover:bg-transparent hover:text-current ml-[-4px]"
+
+            <Link 
+              href="/pricing"
+              className="text-gray-700 dark:text-zinc-300 hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors"
             >
-              <Link href="/pricing" passHref>
-                <p className="text-base font-medium antialiased">Pricing</p>
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              className="hover:bg-transparent hover:text-current ml-[-4px]"
+              Pricing
+            </Link>
+
+            <Link 
+              href="/hub"
+              className="text-gray-700 dark:text-zinc-300 hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors"
             >
-              <Link href="/hub" passHref>
-                <p className="text-base font-medium antialiased">Hub</p>
-              </Link>
-            </Button>
+              Hub
+            </Link>
+          </div>
+
+          {/* Right Section */}
+          <div className="flex items-center gap-4">
+            <SignedOut>
+              <div className="flex gap-3">
+                <Link href="/sign-in">
+                  <Button className="bg-sky-600 hover:bg-sky-700 dark:bg-sky-700 dark:hover:bg-sky-800 text-white font-medium px-6">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white font-medium px-6">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+            </SignedOut>
+            
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="ml-2">
+                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-
-        <div className="flex items-center space-x-4">
-          <SignedOut>
-            <div className="space-x-4 ">
-              <Link href="/sign-in" passHref>
-                <Button className="text-white bg-sky-500 hover:bg-sky-600 text-normal font-semibold rounded-lg antialiased w-20 leading-6 button-two">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/sign-up" passHref>
-                <Button className="text-white bg-orange-500 hover:bg-orange-600 text-normal font-semibold rounded-lg antialiased w-20 leading-6 button-two">
-                  Sign Up
-                </Button>
-              </Link>
-            </div>
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setTheme("light")}>
-                Light
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
-                Dark
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
-                System
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </nav>
-      <hr className="border-t-2 border-gray-200 mt-1 w-3/4 mx-auto" />
+      <div className="border-t border-gray-200 dark:border-zinc-800" />
     </header>
   );
-};
+}
