@@ -92,19 +92,19 @@ export default function GenerateWithTextPage() {
           mt: 6,
           mb: 6,
           maxWidth: "80rem",
-          mx: "auto",  // This centers the Box within its parent container
+          mx: "auto", 
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",  // Centers the content inside the Box horizontally
+          alignItems: "center",
         }}
       >
-        <h3 className="mb-6 scroll-m-20 antialiased text-4xl font-bold tracking-tight lg:text-5xl">Generate Flashcards</h3>
+        <h3 className="mb-6 scroll-m-20 antialiased text-4xl font-bold tracking-tight 2xl:text-5xl">Generate Flashcards</h3>
         <TextArea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Enter text to generate flashcards"
           rows={5}
-          className="mb-4 ring ring-sky-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased"
+          className="mb-4 ring ring-sky-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased w-9/12 2xl:w-full"
         />
         <Button
           className="bg-sky-700 hover:bg-sky-600 text-white w-1/2"
