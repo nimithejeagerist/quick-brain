@@ -6,6 +6,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { db } from "@/firebase";
 import { writeBatch, doc, collection, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 type FlashCardFormProps = {
   id: number;
@@ -14,7 +16,6 @@ type FlashCardFormProps = {
   isDeleting?: boolean;
 };
 
-// Format for saving the flashcards
 type FlashcardSaveProps = {
   back: string;
   front: string;
@@ -32,9 +33,17 @@ export default function CreateFlashcards() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [pageLoading, setPageLoading] = useState(true);
   const router = useRouter();
-
   const dummyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Simulate initial page load
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const addFlashcard = () => {
     setFlashcards([
@@ -123,6 +132,39 @@ export default function CreateFlashcards() {
       setIsLoading(false);
     }
   };
+
+  if (pageLoading) {
+    return (
+      <div className="relative flex flex-col justify-center items-center w-7/12 mx-auto">
+        <div className="mt-10 mb-8">
+          <Skeleton width={400} height={60} />
+        </div>
+
+        <div className="w-5/12 mb-8">
+          <Skeleton height={40} />
+        </div>
+
+        <div className="w-full space-y-4">
+          {[1, 2, 3, 4, 5].map((index) => (
+            <div key={index} className="bg-white dark:bg-zinc-800 rounded-xl p-6">
+              <div className="space-y-4">
+                <Skeleton height={100} />
+                <Skeleton height={100} />
+                <div className="flex justify-end">
+                  <Skeleton width={100} height={40} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-row gap-4 mt-8 mb-12">
+          <Skeleton width={120} height={50} />
+          <Skeleton width={160} height={50} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex flex-col justify-center items-center">

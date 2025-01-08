@@ -1,13 +1,15 @@
 "use client";
 
-import { Button, Grid, Modal, Box, Typography, TextField, IconButton } from "@mui/material";
+import { Button, Grid, Box, Typography } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import Flashcard from "@/components/Flashcard";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface FlashcardProps {
   flashcard: {
@@ -31,6 +33,7 @@ export default function FlashcardsPage({ params }: FlashcardsPageProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedFlashcard, setSelectedFlashcard] = useState<FlashcardProps["flashcard"] | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFlashcards = async () => {
@@ -51,8 +54,10 @@ export default function FlashcardsPage({ params }: FlashcardsPageProps) {
         }));
 
         setFlashcards(flashcardsData);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching flashcards:", error);
+        setLoading(false);
       }
     };
 
@@ -134,6 +139,51 @@ export default function FlashcardsPage({ params }: FlashcardsPageProps) {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="w-full">
+        <Box sx={{ mt: 6, mb: 6, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div className="mb-1">
+            <Skeleton width={300} height={60} />
+          </div>
+          <div className="grid grid-flow-col gap-10 mt-2">
+            <div className="flex justify-center items-center">
+              <Skeleton width={48} height={48} circle />
+            </div>
+            <div className="w-[500px] h-[300px]">
+              <Skeleton height="100%" />
+            </div>
+            <div className="flex justify-center items-center">
+              <Skeleton width={48} height={48} circle />
+            </div>
+          </div>
+          <div className="w-full max-w-4xl mt-12">
+            <div className="flex justify-between items-center mb-8">
+              <Skeleton width={200} height={32} />
+              <Skeleton width={120} height={40} />
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white dark:bg-zinc-800 rounded-xl p-4">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <Skeleton height={24} width="80%" />
+                      <Skeleton height={20} width="60%" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Skeleton width={32} height={32} circle />
+                      <Skeleton width={32} height={32} circle />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Box>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <Box
@@ -165,75 +215,49 @@ export default function FlashcardsPage({ params }: FlashcardsPageProps) {
             </div>
             <hr className="border-t-2 border-gray-200 mt-16 w-3/4 mx-auto" />
 
-            <Box
-              sx={{
-                mt: 6,
-                mb: 6,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}>
-              <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <Typography
-                variant="h6"
-                className="scroll-m-20 antialiased text-2xl font-bold tracking-tight lg:text-4xl"
-                sx={{ position: "relative", display: "inline-flex", alignItems: "center" }}
-              >
-                All Questions
+            <div className="w-full max-w-4xl mt-12">
+              <div className="flex justify-between items-center mb-8">
+                <Typography variant="h4" className="text-2xl font-bold tracking-tight dark:text-white">
+                  All Questions ({flashcards.length})
+                </Typography>
                 <Button
-                  variant="contained"
-                  color="primary"
                   onClick={() => handleOpenModal()}
-                  sx={{
-                    marginLeft: 2, // Adds some space between the text and the button
-                    borderRadius: '50%', // Makes the button circular
-                    width: "40px", 
-                    height: "40px",
-                    minWidth: "auto", // Removes default min-width
-                    padding: "0.5rem", // Adjust padding to make it look like a small icon button
-                  }}
+                  className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
                 >
-                  +
+                  Add Question
                 </Button>
-              </Typography>
-            </Box>
-            <Grid container spacing={2} marginTop={2}>
-              {flashcards.map((flashcard) => (
-                <Grid item xs={12} sm={12} md={12} key={flashcard.id}>
-                  <Box
-                    sx={{
-                      padding: 2,
-                      backgroundColor: "white",
-                      borderRadius: "8px",
-                      boxShadow: 1,
-                      display: "flex", // Use flexbox to align items
-                      justifyContent: "space-between", // Space between text and icons
-                      alignItems: "center", // Vertically center the content
-                    }}
-                    className="dark:bg-slate-700"
+              </div>
+
+              <div className="space-y-4">
+                {flashcards.map((flashcard) => (
+                  <div
+                    key={flashcard.id}
+                    className="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-zinc-700"
                   >
-                    <Typography variant="body1" sx={{ flexGrow: 1 }}>
-                      {flashcard.front}
-                    </Typography>
-                    <Box>
-                      <IconButton color="primary" onClick={() => handleOpenModal(flashcard)} className="dark:text-blue-300">
-                        <Edit />
-                      </IconButton>
-                      <IconButton color="secondary" onClick={() => handleDeleteFlashcard(flashcard.id!)} className="dark:text-red-400">
-                        <Delete />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-            </Box>
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <p className="text-gray-900 dark:text-white text-lg">{flashcard.front}</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{flashcard.back}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleOpenModal(flashcard)}
+                          className="p-2 text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFlashcard(flashcard.id!)}
+                          className="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                        >
+                          <Delete className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </>
         ) : (
           <Box
@@ -246,64 +270,84 @@ export default function FlashcardsPage({ params }: FlashcardsPageProps) {
               textAlign: "center"
             }}
           >
-            <Typography variant="h6">No flashcards found in this collection.</Typography>
+            <Typography variant="h6" className="dark:text-white mb-4">No flashcards found in this collection.</Typography>
             <Button
-              variant="contained"
-              color="primary"
               onClick={() => handleOpenModal()}
-              sx={{ mt: 2 }}
+              className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg"
             >
-              Create New Flashcard
+              Create First Flashcard
             </Button>
           </Box>
         )}
       </Box>
 
-      <Modal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-      >
-        <Box sx={{ p: 4, backgroundColor: "white", margin: "auto", mt: 6, borderRadius: "8px", width: "400px" }}>
-          <Typography className="dark:text-black" id="modal-title" variant="h6">{isEditing ? "Edit Flashcard" : "Add New Flashcard"}</Typography>
-          <form>
-            <TextField
-              id="modal-description"
-              label="Question"
-              fullWidth
-              margin="normal"
-              value={selectedFlashcard?.front || ""}
-              onChange={(e) =>
-                setSelectedFlashcard((prev) => ({
-                  ...prev!,
-                  front: e.target.value,
-                }))
-              }
-            />
-            <TextField
-              label="Answer"
-              fullWidth
-              margin="normal"
-              value={selectedFlashcard?.back || ""}
-              onChange={(e) =>
-                setSelectedFlashcard((prev) => ({
-                  ...prev!,
-                  back: e.target.value,
-                }))
-              }
-            />
-            <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
-              <Button onClick={handleCloseModal} variant="outlined">
-                Cancel
-              </Button>
-              <Button onClick={handleSaveFlashcard} variant="contained" color="primary">
-                {isEditing ? "Save Changes" : "Add Flashcard"}
-              </Button>
-            </Box>
-          </form>
-        </Box>
-      </Modal>
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 w-full max-w-md relative">
+            <button
+              onClick={handleCloseModal}
+              className="absolute right-4 top-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h2 className="text-2xl font-semibold mb-6 dark:text-white">
+              {isEditing ? "Edit Flashcard" : "Add New Flashcard"}
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Question
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 dark:bg-zinc-700 dark:text-white"
+                  rows={3}
+                  value={selectedFlashcard?.front || ""}
+                  onChange={(e) =>
+                    setSelectedFlashcard((prev) => ({
+                      ...prev!,
+                      front: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Answer
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 dark:bg-zinc-700 dark:text-white"
+                  rows={3}
+                  value={selectedFlashcard?.back || ""}
+                  onChange={(e) =>
+                    setSelectedFlashcard((prev) => ({
+                      ...prev!,
+                      back: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveFlashcard}
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors"
+                >
+                  {isEditing ? "Save Changes" : "Add Flashcard"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

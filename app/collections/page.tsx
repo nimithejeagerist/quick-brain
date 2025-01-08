@@ -28,6 +28,8 @@ import {
 } from "firebase/firestore";
 import Link from "next/link";
 import { Pencil, Trash2, Share, Plus } from "lucide-react";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface Collection {
   name: string;
@@ -225,8 +227,29 @@ export default function CollectionsPage() {
       <Container maxWidth="lg">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           {loading ? (
-            <div className="flex justify-center items-center min-h-[400px]">
-              <div className="w-8 h-8 border-4 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="space-y-6 sm:space-y-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+                <Skeleton width={200} height={36} />
+                <Skeleton width={150} height={40} />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {[1, 2, 3].map((index) => (
+                  <div key={index} className="w-full bg-white dark:bg-zinc-800 rounded-xl p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <Skeleton width={200} height={24} />
+                        <Skeleton width={100} height={20} />
+                      </div>
+                      <div className="flex gap-2">
+                        <Skeleton width={40} height={40} circle />
+                        <Skeleton width={40} height={40} circle />
+                        <Skeleton width={40} height={40} circle />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : collections.length === 0 ? (
             <div className="text-center space-y-4 sm:space-y-6">

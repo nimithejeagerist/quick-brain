@@ -6,6 +6,8 @@ import { collection, doc, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
 import Flashcard from "@/components/Flashcard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface FlashcardProps {
   flashcard: {
@@ -29,6 +31,7 @@ export default function HubFlashcardsPage({ params, searchParams }: FlashcardsPa
   const { userId } = searchParams;
   const [flashcards, setFlashcards] = useState<FlashcardProps["flashcard"][]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFlashcards = async () => {
@@ -48,8 +51,10 @@ export default function HubFlashcardsPage({ params, searchParams }: FlashcardsPa
         }));
 
         setFlashcards(flashcardsData);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching flashcards:", error);
+        setLoading(false);
       }
     };
 
@@ -64,8 +69,42 @@ export default function HubFlashcardsPage({ params, searchParams }: FlashcardsPa
     setCurrentCardIndex((prevIndex) => (prevIndex - 1 + flashcards.length) % flashcards.length);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Container maxWidth="lg">
+          <Box sx={{ pt: 4, pb: 8 }}>
+            <div className="mb-4 text-center">
+              <Skeleton width={300} height={40} />
+            </div>
+            
+            <div className="flex justify-center items-center gap-8">
+              <div className="p-2">
+                <Skeleton circle width={48} height={48} />
+              </div>
+
+              <div className="flex-1 flex justify-center">
+                <div className="w-[500px] h-[300px]">
+                  <Skeleton height="100%" />
+                </div>
+              </div>
+
+              <div className="p-2">
+                <Skeleton circle width={48} height={48} />
+              </div>
+            </div>
+
+            <div className="text-center mt-4">
+              <Skeleton width={100} height={20} />
+            </div>
+          </Box>
+        </Container>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-100 to-sky-50 dark:from-zinc-900 dark:to-zinc-800">
+    <div className="min-h-screen">
       <Container maxWidth="lg">
         <Box sx={{ pt: 4, pb: 8 }}>
           {flashcards.length > 0 ? (
