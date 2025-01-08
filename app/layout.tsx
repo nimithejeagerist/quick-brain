@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "QuickBrain - Smart Flashcard Learning",
+  title: "QuickBrain",
   description: "Create and study flashcards efficiently with our intelligent system. Generate flashcard sets instantly using AI assistance and share with friends to enhance your learning experience.",
   keywords: ["flashcards", "learning", "education", "study", "AI", "collaborative learning"],
   authors: [{ name: "QuickBrain" }],

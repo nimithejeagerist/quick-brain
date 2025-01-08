@@ -6,26 +6,49 @@ const openai = new OpenAI({
 });
 
 const systemPrompt = `
-You are a flashcard creator. Create exactly 10 flashcards from the provided text.
-Each flashcard should have a question on the front and an answer on the back.
-Both front and back should be one sentence long.
-Return the result in a JSON format:
+You are an expert educator and flashcard creator specializing in optimizing learning through spaced repetition.
+
+Your task is to create exactly 20 high-quality flashcards from the provided text that will maximize learning retention.
+
+Guidelines for creating exceptional flashcards:
+- Each flashcard should focus on one key concept, fact, or relationship
+- Questions should promote active recall and critical thinking
+- Answers should be clear, concise and comprehensive
+- Use a mix of question types: definitions, comparisons, applications, and cause-effect relationships
+- Ensure progressive difficulty from foundational to advanced concepts
+- Avoid yes/no questions in favor of "how" and "why" questions
+- Both front and back should be clear and concise, ideally one sentence
+- Include real-world examples and applications where relevant
+
+Return the flashcards in this JSON format:
 {
-  "flashcards":[
+  "flashcards": [
     {
-      "front": "Front of the card",
-      "back": "Back of the card"
+      "front": "Question that promotes active recall",
+      "back": "Clear, concise answer"
     }
   ]
 }
+
+Aim to create flashcards that will truly enhance understanding and long-term retention of the material.
 `;
 
 export async function POST(req: Request) {
     try {
         const { textGenerated } = await req.json();
 
-        if (!textGenerated) {
-            return NextResponse.json({ error: "No text provided for flashcard generation" }, { status: 400 });
+        if (!textGenerated || typeof textGenerated !== 'string') {
+            return NextResponse.json({ 
+                error: "Invalid or missing text input",
+                details: "Please provide valid text content for flashcard generation"
+            }, { status: 400 });
+        }
+
+        if (textGenerated.trim().length < 50) {
+            return NextResponse.json({
+                error: "Insufficient content",
+                details: "Please provide more detailed text for meaningful flashcard generation"
+            }, { status: 400 });
         }
 
         const completion = await openai.chat.completions.create({
@@ -34,18 +57,39 @@ export async function POST(req: Request) {
                 { role: "system", content: systemPrompt },
                 { role: "user", content: textGenerated }
             ],
+            temperature: 0.7,
+            max_tokens: 2000,
         });
         
         const content = completion.choices[0].message.content;
 
         if (!content) {
-            return NextResponse.json({ error: "Failed to generate flashcards" }, { status: 500 });
+            throw new Error("No content generated from OpenAI");
         }
 
-        const flashcards = JSON.parse(content);
-        return NextResponse.json( flashcards.flashcards );
+        try {
+            const flashcards = JSON.parse(content);
+            
+            if (!flashcards.flashcards || !Array.isArray(flashcards.flashcards)) {
+                throw new Error("Invalid flashcard format returned");
+            }
+
+            if (flashcards.flashcards.length !== 20) {
+                throw new Error("Incorrect number of flashcards generated");
+            }
+
+            return NextResponse.json(flashcards.flashcards);
+        } catch (parseError) {
+            console.error("JSON parsing error:", parseError);
+            throw new Error("Failed to parse generated flashcards");
+        }
+
     } catch (error) {
-        console.error("Error creating chat completion:", error);
-        return NextResponse.json({ error: "Failed to generate flashcards" }, { status: 500 });
+        console.error("Error in flashcard generation:", error);
+        return NextResponse.json({ 
+            error: "Failed to generate flashcards",
+            details: error instanceof Error ? error.message : "Unknown error occurred",
+            timestamp: new Date().toISOString()
+        }, { status: 500 });
     }
 }

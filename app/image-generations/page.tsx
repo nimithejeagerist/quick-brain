@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useState, CSSProperties } from "react";
+import { useState, useEffect, CSSProperties } from "react";
 import { Container, Box } from "@mui/material";
 import { db } from "@/firebase";
 import { collection, doc, getDoc, writeBatch } from "firebase/firestore";
@@ -12,6 +12,9 @@ import { createWorker } from "tesseract.js";
 import Image from "next/image";
 import { TextArea } from "@/components/ui/textarea";
 import SyncLoader from "react-spinners/SyncLoader";
+import { useRouter } from "next/navigation";
+import Skeleton from "react-loading-skeleton";
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const override: CSSProperties = {
   display: "block",
@@ -20,6 +23,7 @@ const override: CSSProperties = {
 };
 
 export default function GenerateWithImagePage() {
+  const router = useRouter();
   const color = "#0284c7"
   const { isLoaded, isSignedIn, user } = useUser();
   const [loading, setLoading] = useState(false);
@@ -30,30 +34,63 @@ export default function GenerateWithImagePage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in");
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   const handleExtract = async () => {
-    if (!imageData) return;
+    if (!imageData) {
+      setError("Please select an image first");
+      return;
+    }
 
-    const worker = await createWorker("eng", 1,{
-      logger: (m) => {
-        setProgress(m.progress);
-        setProgressLabel(m.progress === 1 ? "done" : m.status);
-      },
-    });
+    try {
+      const worker = await createWorker("eng", 1,{
+        logger: (m) => {
+          setProgress(m.progress);
+          setProgressLabel(m.progress === 1 ? "done" : m.status);
+        },
+      });
 
-    const { data: { text } } = await worker.recognize(imageData);
-    await worker.terminate();
+      const { data: { text } } = await worker.recognize(imageData);
+      await worker.terminate();
 
-    return text;
+      if (!text.trim()) {
+        throw new Error("No text could be extracted from the image");
+      }
+
+      return text;
+    } catch (error) {
+      console.error("Error extracting text:", error);
+      setError("Failed to extract text from image. Please try a different image.");
+      return null;
+    }
   };
 
   const handleSubmit = async () => {
+    if (!imageData) {
+      setError("Please select an image first");
+      return;
+    }
+
+    if (imageData.size > 10 * 1024 * 1024) {
+      setError("Image size must be less than 10MB");
+      return;
+    }
+
+    setError("");
     setFlashcards([]);
     setLoading(true);
-    const extractedText = await handleExtract();
-    if (!extractedText) return;
-
+    
     try {
+      const extractedText = await handleExtract();
+      if (!extractedText) return;
+
       const response = await fetch("/api/image-generations", {
         method: "POST",
         body: JSON.stringify({ textGenerated: extractedText }),
@@ -62,54 +99,103 @@ export default function GenerateWithImagePage() {
         },
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      setLoading(false);
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       setFlashcards(data);
     } catch (error) {
-      setLoading(false);
       console.error("Error generating flashcards:", error);
+      setError("Failed to generate flashcards. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const saveFlashcards = async () => {
     if (!name) {
-      alert("Please enter a name for the flashcard set");
+      setError("Please enter a name for the flashcard set");
       return;
     }
 
+    if (!user) {
+      setError("You must be signed in to save flashcards");
+      return;
+    }
+
+    if (!flashcards.length) {
+      setError("No flashcards to save");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
     const batch = writeBatch(db);
-    if (user) {
-      const userDocRef = doc(collection(db, "users"), user.id);
+    const userDocRef = doc(collection(db, "users"), user.id);
 
-      try {
-        const docSnap = await getDoc(userDocRef);
+    try {
+      const docSnap = await getDoc(userDocRef);
 
-        if (docSnap.exists()) {
-          const collections = docSnap.data().flashcards || [];
+      if (docSnap.exists()) {
+        const collections = docSnap.data().flashcards || [];
 
-          if (collections.find((f: any) => f.name === name)) {
-            alert("Flashcard set with the same name already exists");
-            return;
-          } else {
-            collections.push({ name, description });
-            batch.set(userDocRef, { flashcards: collections }, { merge: true });
-          }
+        if (collections.find((f: any) => f.name === name)) {
+          throw new Error("Flashcard set with the same name already exists");
         } else {
-          batch.set(userDocRef, { flashcards: [{ name, description }] });
+          collections.push({ name, description });
+          batch.set(userDocRef, { flashcards: collections }, { merge: true });
         }
-
-        const flashcardRef = collection(userDocRef, name);
-        flashcards.forEach((flashcard) => {
-          const cardDocRef = doc(flashcardRef);
-          batch.set(cardDocRef, flashcard);
-        });
-
-        await batch.commit();
-      } catch (error) {
-        console.error("Error getting user document:", error);
+      } else {
+        batch.set(userDocRef, { flashcards: [{ name, description }] });
       }
+
+      const flashcardRef = collection(userDocRef, name);
+      flashcards.forEach((flashcard) => {
+        const cardDocRef = doc(flashcardRef);
+        batch.set(cardDocRef, flashcard);
+      });
+
+      await batch.commit();
+      router.push('/collections');
+    } catch (error) {
+      console.error("Error saving flashcards:", error);
+      setError(error instanceof Error ? error.message : "Error saving flashcards. Please try again.");
+      setSaving(false);
     }
   };
+
+  if (!isLoaded) {
+    return (
+      <div className="w-full max-w-[1440px] mx-auto px-4">
+        <div className="mt-6 mb-6 max-w-[80rem] mx-auto flex flex-col items-center">
+          <Skeleton height={48} width="75%" className="mb-10" />
+          <Skeleton height={300} width="100%" className="max-w-2xl mb-6" />
+          <Skeleton height={40} width="100%" className="max-w-2xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return null; // useEffect will redirect
+  }
+
+  if (saving) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <SyncLoader color={color} size={15} />
+          <p className="text-xl font-medium dark:text-white">Saving your flashcards...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-4">
@@ -117,6 +203,12 @@ export default function GenerateWithImagePage() {
         <h1 className="mb-10 scroll-m-20 antialiased text-4xl font-bold tracking-tight lg:text-5xl">
           Generate Flashcards from Image
         </h1>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded w-full max-w-2xl">
+            {error}
+          </div>
+        )}
 
         <div className="w-full max-w-2xl">
           <div 
@@ -162,7 +254,13 @@ export default function GenerateWithImagePage() {
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
-                    setImageData(e.target.files[0]);
+                    const file = e.target.files[0];
+                    if (file.size > 10 * 1024 * 1024) {
+                      setError("Image size must be less than 10MB");
+                      return;
+                    }
+                    setError("");
+                    setImageData(file);
                   }
                 }}
               />
@@ -170,7 +268,10 @@ export default function GenerateWithImagePage() {
 
             {imageData && (
               <button
-                onClick={() => setImageData(null)}
+                onClick={() => {
+                  setImageData(null);
+                  setError("");
+                }}
                 className="absolute -top-3 -right-3 p-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,6 +353,7 @@ export default function GenerateWithImagePage() {
                   setName('');
                   setDescription('');
                   setFlashcards([]);
+                  setError('');
                 }}
               >
                 <p className="text-base antialiased tracking-tight">Clear All</p>

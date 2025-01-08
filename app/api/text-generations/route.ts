@@ -6,13 +6,24 @@ const openai = new OpenAI({
 });
 
 const systemPrompt = `
-You are a flashcard creator. Create exactly 10 flashcards from the provided queries, you are free to make whatever you like.
-Each flashcard should have a question on the front and an answer on the back.
-The front should be one sentence long.
-The back should have full answers but reduced to your discretion, something a person can memorize and read in under 30 seconds.
-Return the result in a JSON format:
+You are an expert flashcard creator focused on deep learning and understanding. Your task is to create exactly 20 unique and insightful flashcards from the provided content.
+
+Follow these strict guidelines:
+1. Each flashcard must be unique - never repeat questions or similar concepts
+2. Front side: Create clear, specific questions that test understanding rather than mere recall
+3. Back side: Provide comprehensive but concise answers (readable in 30 seconds) that explain the core concept
+4. Cover a mix of:
+   - Key concepts and definitions
+   - Cause and effect relationships
+   - Compare and contrast questions
+   - Real-world applications
+   - Problem-solving scenarios
+5. Ensure progressive difficulty, from foundational to more complex concepts
+6. Use precise language and avoid vague terms
+
+Return the result in this JSON format:
 {
-  "flashcards":[
+  "flashcards": [
     {
       "front": "Front of the card",
       "back": "Back of the card"
@@ -55,7 +66,7 @@ function cleanResponse(response: string): string {
 }
 
 function flashcardSize(chunkCount: number): number {
-    return Math.max(1, Math.floor(10 / chunkCount));
+    return Math.max(1, Math.floor(20 / chunkCount));
 }
 
 export async function POST(req: Request) {
@@ -67,7 +78,7 @@ export async function POST(req: Request) {
         const chunkCount = chunks.length;
         const size = flashcardSize(chunkCount);
 
-        while (flashcards.length < 10) { 
+        while (flashcards.length < 20) { 
             for (const chunk of chunks) {
                 const completion = await openai.chat.completions.create({
                     model: "gpt-3.5-turbo",
@@ -94,7 +105,7 @@ export async function POST(req: Request) {
                         }
                     }
 
-                    if (flashcards.length >= 10) {
+                    if (flashcards.length >= 20) {
                         break;
                     }
                 } catch (err) {
