@@ -43,7 +43,7 @@ const FlashcardForm: React.FC<FlashcardFormProps> = ({
   };
 
   return (
-    <div id={`card-${id}`} className={`w-full max-w-4xl mx-auto flex flex-col mb-6 bg-blue-100 dark:bg-sky-600 rounded-lg shadow-md transition-all duration-200 hover:shadow-lg ${isDeleting ? 'animate-fadeOutLeft' : 'animate-fadeInRight'}`}>
+    <div id={`card-${id}`} className={`w-full max-w-4xl mx-auto flex flex-col mb-6 bg-blue-100 dark:bg-sky-700/70 rounded-lg shadow-md transition-all duration-200 hover:shadow-lg ${isDeleting ? 'animate-fadeOutLeft' : 'animate-fadeInRight'}`}>
       <div className="p-4 border-b border-zinc-400 dark:border-slate-300">
         <div className="flex items-center justify-between">
           <p className="text-lg font-medium antialiased">{id + 1}</p>

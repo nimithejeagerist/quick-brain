@@ -75,13 +75,6 @@ export default function Navbar() {
             </DropdownMenu>
 
             <Link 
-              href="/pricing"
-              className="text-gray-700 dark:text-zinc-300 hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors"
-            >
-              Pricing
-            </Link>
-
-            <Link 
               href="/hub"
               className="text-gray-700 dark:text-zinc-300 hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors"
             >

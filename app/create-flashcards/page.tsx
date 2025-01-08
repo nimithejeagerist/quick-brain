@@ -125,7 +125,7 @@ export default function CreateFlashcards() {
   };
 
   return (
-    <div className="relative flex flex-col justify-center mt-10 items-center">
+    <div className="relative flex flex-col justify-center items-center">
       {isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50 animate-fadeIn">
           <div className="flex flex-col text-center items-center">
@@ -137,7 +137,7 @@ export default function CreateFlashcards() {
         </div>
       )}
 
-      <h3 className="mb-8 scroll-m-20 antialiased text-4xl font-bold tracking-tight 2xl:text-5xl bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-transparent animate-fadeIn">
+      <h3 className="mt-10 mb-8 scroll-m-20 antialiased text-4xl font-bold tracking-tight 2xl:text-5xl text-black dark:text-white bg-clip-text animate-fadeIn">
         Create Your Flashcards
       </h3>
 
@@ -149,7 +149,7 @@ export default function CreateFlashcards() {
           onChange={(e) => setName(e.target.value)}
         />
         {name && (
-          <p className="mt-2 text-sm text-zinc-500 dark:text-slate-400 animate-fadeIn">
+          <p className="mt-2 text-sm text-zinc-500 dark:text-slate-300 animate-fadeIn">
             Creating set: {name}
           </p>
         )}

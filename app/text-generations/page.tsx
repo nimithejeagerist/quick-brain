@@ -2,7 +2,6 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useState, useEffect, CSSProperties } from "react";
-import { Container, Box } from "@mui/material";
 import { db } from "@/firebase";
 import { collection, doc, getDoc, writeBatch } from "firebase/firestore";
 import Preview from "@/components/Preview";
@@ -83,21 +82,9 @@ export default function GenerateWithTextPage() {
     }
   };
 
-
-
   return (
-    <Container maxWidth="xl"> 
-      <Box
-        sx={{
-          mt: 6,
-          mb: 6,
-          maxWidth: "80rem",
-          mx: "auto", 
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
+    <div className="w-full max-w-[1440px] mx-auto px-4">
+      <div className="mt-6 mb-6 max-w-[80rem] mx-auto flex flex-col items-center">
         <h3 className="mb-6 scroll-m-20 antialiased text-4xl font-bold tracking-tight 2xl:text-5xl">Generate Flashcards</h3>
         <TextArea
           value={text}
@@ -109,20 +96,20 @@ export default function GenerateWithTextPage() {
         <Button
           className="bg-sky-700 hover:bg-sky-600 text-white w-1/2"
           onClick={handleSubmit}
+          disabled={!text.trim()}
         >
-          <p className="text-base antialiased">Submit</p>
+          <p className="text-base antialiased tracking-tight">Submit</p>
         </Button>
 
         {loading && (
           <div className="flex justify-center items-center mt-20">
             <SyncLoader
-            color={color}
-            loading={loading}
-            cssOverride={override}
-            size={10}
-          />
+              color={color}
+              loading={loading}
+              cssOverride={override}
+              size={10}
+            />
           </div>
-          
         )}
 
         {flashcards.length > 0 && (
@@ -130,14 +117,13 @@ export default function GenerateWithTextPage() {
             <h2 className="mt-14 mb-2 antialiased text-3xl font-semibold tracking-tight">
               Preview Your Flashcards
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+            <div className="flex flex-col gap-5">
               {flashcards.map((flashcard, index) => (
                 <div key={index}>
                   <Preview flashcard={flashcard} />
                 </div>
               ))}
             </div>
-              
 
             <h3 className="mt-4 mb-2 antialiased text-2xl font-semibold tracking-tight">
               Flashcards generated! Save them below:
@@ -145,25 +131,40 @@ export default function GenerateWithTextPage() {
             <TextArea
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter a name for the collection"
+              placeholder="Enter a name for the collection (max 50 chars)"
+              maxLength={50}
               className="mb-4 ring ring-violet-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased"
             />
             <TextArea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter a description for the collection"
+              placeholder="Enter a description for the collection (max 200 chars)"
+              maxLength={200}
               className="mb-4 ring ring-violet-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased"
             />
-            <Button
-              className="bg-violet-800 hover:b-violet-700 text-white w-1/2"
-              onClick={saveFlashcards}
-              disabled={!name || !flashcards.length}
-            >
-              <p className="text-base antialiased">Save Flashcards</p>
-            </Button>
+            <div className="flex gap-4 w-1/2">
+              <Button
+                className="bg-violet-800 hover:bg-violet-700 text-white flex-1"
+                onClick={saveFlashcards}
+                disabled={!name || !flashcards.length}
+              >
+                <p className="text-base antialiased tracking-tight">Save Flashcards</p>
+              </Button>
+              <Button
+                className="bg-red-700 hover:bg-red-600 text-white flex-1"
+                onClick={() => {
+                  setText('');
+                  setName('');
+                  setDescription('');
+                  setFlashcards([]);
+                }}
+              >
+                <p className="text-base antialiased tracking-tight">Clear All</p>
+              </Button>
+            </div>
           </>
         )}
-      </Box>
-    </Container>
+      </div>
+    </div>
   );
 }
