@@ -7,6 +7,7 @@ import { collection, getDocs } from "firebase/firestore";
 import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { useSearchParams } from "next/navigation";
 
 interface Collection {
   name: string;
@@ -21,6 +22,8 @@ export default function CommunityHub() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'public' | 'owned'>('public');
+  const searchParams = useSearchParams();
+  const userId = searchParams.get('userId');
 
   useEffect(() => {
     const fetchHubCollections = async () => {
@@ -116,7 +119,7 @@ export default function CommunityHub() {
               key={collection.name}
               className="group bg-white dark:bg-zinc-800 p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-sky-100 dark:hover:border-sky-900"
             >
-              <Link href={`/flashcards/${collection.collectionName}`} className="block">
+              <Link href={`/hub-flashcards/${collection.collectionName}?userId=${collection.userId}`} className="block">
                 <div className="space-y-4">
                   <h3 className="text-2xl font-semibold antialiased tracking-tight text-gray-900 dark:text-zinc-100 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                     {collection.collectionName}
@@ -137,6 +140,7 @@ export default function CommunityHub() {
                   className="mt-4 w-full px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 dark:focus:ring-offset-zinc-800"
                   onClick={(e) => {
                     e.preventDefault();
+                    window.location.href = `/flashcards/${collection.collectionName}`;
                   }}
                 >
                   Edit Collection
