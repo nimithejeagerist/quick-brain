@@ -4,19 +4,11 @@ import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import {
   Container,
-  Typography,
-  Box,
-  List,
-  ListItem,
-  ListItemText,
-  Button,
-  IconButton,
   Modal,
   TextField,
   Snackbar,
   Alert
 } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
 import { db } from "@/firebase";
 import {
   collection,
@@ -24,9 +16,7 @@ import {
   getDoc,
   setDoc,
   getDocs,
-  updateDoc,
   writeBatch,
-  DocumentData,
 } from "firebase/firestore";
 import Link from "next/link";
 import { Pencil, Trash2, Share, Plus } from "lucide-react";

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { SignIn, useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
+import SyncLoader from "react-spinners/SyncLoader";
 
 export default function SignInPage() {
   const { isLoaded, userId } = useAuth();
@@ -17,17 +18,24 @@ export default function SignInPage() {
   }, [isLoaded, userId, redirectUrl, router]);
 
   if (!isLoaded) {
-    // Show a loading state while waiting for Clerk to load the auth state
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <SyncLoader color="#0284c7" size={15} />
+        <p className="text-lg font-medium animate-pulse">Loading your experience...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100">
-      <SignIn 
-        routing="path" 
-        path="/sign-in" 
-        fallbackRedirectUrl={redirectUrl || "/"}
-      />
+    <div className="flex flex-col justify-center items-center min-h-screen">
+      <div className="w-full max-w-md px-4">
+        <h1 className="text-3xl font-bold text-center mb-8">Welcome Back!</h1>
+        <SignIn 
+          routing="path" 
+          path="/sign-in" 
+          fallbackRedirectUrl={redirectUrl || "/"}
+        />
+      </div>
     </div>
   );
 }
