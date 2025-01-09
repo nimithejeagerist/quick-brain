@@ -103,7 +103,6 @@ export default function CollectionsPage() {
         const batch = writeBatch(db);
         const userCollections: Collection[] = docSnap.data().flashcards || [];
 
-        // Update collections array first
         const updatedCollections = userCollections.map((col: Collection) => {
           if (col.name === oldName) {
             return { ...col, name: newCollectionName };
@@ -111,7 +110,6 @@ export default function CollectionsPage() {
           return col;
         });
 
-        // Update state optimistically
         setCollections(
           updatedCollections.map((col: Collection) => {
             const existing = collections.find((c) => c.name === (col.name === oldName ? newCollectionName : col.name));
@@ -143,7 +141,6 @@ export default function CollectionsPage() {
       }
     } catch (error) {
       console.error("Error updating collection:", error);
-      // Revert optimistic update on error
       await fetchCollections();
     }
   };
@@ -152,7 +149,6 @@ export default function CollectionsPage() {
     if (!user) return;
 
     try {
-      // Optimistically update UI
       setCollections(collections.filter(col => col.name !== collectionName));
 
       const userDocRef = doc(collection(db, "users"), user.id);
@@ -178,7 +174,6 @@ export default function CollectionsPage() {
       }
     } catch (error) {
       console.error("Error deleting collection:", error);
-      // Revert optimistic update on error
       await fetchCollections();
     }
   };
@@ -233,28 +228,28 @@ export default function CollectionsPage() {
   };
 
   return (
-    <div className="min-h-screen py-8 sm:py-12">
-      <Container maxWidth="lg">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+    <div className="min-h-screen py-4 md:py-8 lg:py-12">
+      <Container maxWidth="lg" className="px-2 sm:px-4 md:px-6">
+        <div className="max-w-5xl mx-auto">
           {loading ? (
-            <div className="space-y-6 sm:space-y-8">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
-                <Skeleton width={200} height={36} />
-                <Skeleton width={150} height={40} />
+            <div className="space-y-4 md:space-y-6 lg:space-y-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
+                <Skeleton width={150} height={32} className="w-full sm:w-auto" />
+                <Skeleton width={120} height={36} className="w-full sm:w-auto" />
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3 md:gap-4">
                 {[1, 2, 3].map((index) => (
-                  <div key={index} className="w-full bg-white dark:bg-zinc-800 rounded-xl p-6">
+                  <div key={index} className="w-full bg-white dark:bg-zinc-800 rounded-lg md:rounded-xl p-4 md:p-6">
                     <div className="flex justify-between items-start">
                       <div className="space-y-2">
-                        <Skeleton width={200} height={24} />
-                        <Skeleton width={100} height={20} />
+                        <Skeleton width={160} height={20} className="w-full sm:w-auto" />
+                        <Skeleton width={80} height={16} className="w-full sm:w-auto" />
                       </div>
-                      <div className="flex gap-2">
-                        <Skeleton width={40} height={40} circle />
-                        <Skeleton width={40} height={40} circle />
-                        <Skeleton width={40} height={40} circle />
+                      <div className="flex gap-1 sm:gap-2">
+                        <Skeleton width={32} height={32} circle className="hidden sm:block" />
+                        <Skeleton width={32} height={32} circle className="hidden sm:block" />
+                        <Skeleton width={32} height={32} circle />
                       </div>
                     </div>
                   </div>
@@ -262,48 +257,48 @@ export default function CollectionsPage() {
               </div>
             </div>
           ) : collections.length === 0 ? (
-            <div className="text-center space-y-4 sm:space-y-6">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+            <div className="text-center space-y-3 md:space-y-4 lg:space-y-6 p-4">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
                 Start Your Learning Journey
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-md mx-auto px-4">
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 max-w-md mx-auto px-2 md:px-4">
                 Create your first collection of flashcards to begin studying effectively
               </p>
               <Link href="/text-generations">
-                <button className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors text-sm sm:text-base">
-                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <button className="inline-flex items-center px-3 md:px-4 lg:px-6 py-2 md:py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors text-sm md:text-base">
+                  <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                   Create Your First Collection
                 </button>
               </Link>
             </div>
           ) : (
-            <div className="space-y-6 sm:space-y-8">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="space-y-4 md:space-y-6 lg:space-y-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                   Your Collections
                 </h1>
                 <Link href="/text-generations">
-                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors text-sm sm:text-base">
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 md:px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors text-sm md:text-base">
+                    <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                     New Collection
                   </button>
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3 md:gap-4">
                 {collections.map((col, index) => (
                   <div
                     key={index}
-                    className="w-full bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-zinc-700 overflow-hidden"
+                    className="w-full bg-white dark:bg-zinc-800 rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-zinc-700 overflow-hidden"
                   >
-                    <div className="p-6 flex justify-between items-start">
+                    <div className="p-4 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
                       {editingId === col.name ? (
-                        <div className="flex-1 flex items-center gap-2">
+                        <div className="flex-1 flex items-center gap-2 w-full">
                           <input
                             type="text"
                             value={newCollectionName}
                             onChange={(e) => setNewCollectionName(e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 dark:bg-zinc-700 dark:text-white text-base"
+                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 dark:bg-zinc-700 dark:text-white text-sm md:text-base"
                             autoFocus
                           />
                           <button
@@ -321,36 +316,36 @@ export default function CollectionsPage() {
                         </div>
                       ) : (
                         <>
-                          <Link href={`/flashcards/${col.name}`}>
+                          <Link href={`/flashcards/${col.name}`} className="flex-1 min-w-0">
                             <div className="cursor-pointer">
                               <div className="space-y-1">
-                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400">
+                                <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 truncate">
                                   {col.name}
                                 </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                                   {col.questionCount} {col.questionCount === 1 ? 'card' : 'cards'}
                                 </p>
                               </div>
                             </div>
                           </Link>
-                          <div className="flex gap-2">
+                          <div className="flex gap-1 sm:gap-2 ml-auto">
                             <button
                               onClick={() => handleStartEditing(col.name)}
-                              className="p-2 text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                              className="p-1.5 sm:p-2 text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
                             >
-                              <Pencil className="w-5 h-5" />
+                              <Pencil className="w-4 h-4 sm:w-5 sm:h-5" />
                             </button>
                             <button
                               onClick={() => handleShareCollection(col.name)}
-                              className="p-2 text-gray-600 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                              className="p-1.5 sm:p-2 text-gray-600 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
                             >
-                              <Share className="w-5 h-5" />
+                              <Share className="w-4 h-4 sm:w-5 sm:h-5" />
                             </button>
                             <button
                               onClick={() => handleDeleteCollection(col.name)}
-                              className="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                              className="p-1.5 sm:p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
                             >
-                              <Trash2 className="w-5 h-5" />
+                              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                             </button>
                           </div>
                         </>
@@ -368,11 +363,13 @@ export default function CollectionsPage() {
           autoHideDuration={6000} 
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          className="mb-safe"
         >
           <Alert 
             onClose={handleCloseSnackbar} 
             severity={snackbar.severity}
             sx={{ width: '100%' }}
+            className="max-w-[90vw] md:max-w-md"
           >
             {snackbar.message}
           </Alert>

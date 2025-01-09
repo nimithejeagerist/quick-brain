@@ -19,16 +19,16 @@ export default function SignInPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 sm:px-6 lg:px-8">
         <SyncLoader color="#0284c7" size={15} />
-        <p className="text-lg font-medium animate-pulse">Loading your experience...</p>
+        <p className="text-lg font-medium animate-pulse text-center">Loading your experience...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen">
-      <div className="w-full max-w-md px-4">
+    <div className="flex flex-col justify-center items-center min-h-screen px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[90%] sm:max-w-md mx-auto">
         <SignIn 
           routing="path" 
           path="/sign-in" 
