@@ -149,6 +149,15 @@ export default function GenerateWithTextPage() {
           </div>
         )}
 
+        <div className="mb-4 p-4 bg-sky-50 dark:bg-sky-950 border border-sky-200 dark:border-sky-800 rounded-lg text-sm sm:text-base w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12">
+          <p className="font-medium mb-2 text-sky-900 dark:text-sky-100">Example prompts for best results:</p>
+          <ul className="list-disc list-inside space-y-2 text-sky-800 dark:text-sky-200">
+            <li>"Create flashcards about the key events of World War II, focusing on dates and significance"</li>
+            <li>"Generate biology flashcards about cell organelles, including their functions and characteristics"</li>
+            <li>"Make flashcards for Spanish vocabulary related to food and dining, including pronunciation guides"</li>
+          </ul>
+        </div>
+
         <TextArea
           value={text}
           onChange={(e) => setText(e.target.value)}

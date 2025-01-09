@@ -13,6 +13,8 @@ import {
   IconButton,
   Modal,
   TextField,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import { db } from "@/firebase";
@@ -46,6 +48,11 @@ export default function CollectionsPage() {
     null
   );
   const [newCollectionName, setNewCollectionName] = useState<string>("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error"
+  });
 
   const fetchCollections = async () => {
     if (user) {
@@ -89,87 +96,33 @@ export default function CollectionsPage() {
     setNewCollectionName("");
   };
 
-  const handleSaveCollectionName = async () => {
-    if (!user || !selectedCollection || !newCollectionName.trim()) return;
-
-    const userDocRef = doc(collection(db, "users"), user.id);
-    const docSnap = await getDoc(userDocRef);
-
-    if (docSnap.exists()) {
-      const batch = writeBatch(db);
-      const userCollections: Collection[] = docSnap.data().flashcards || [];
-
-      const updatedCollections = userCollections.map((col: Collection) => {
-        if (col.name === selectedCollection) {
-          return { ...col, name: newCollectionName };
-        }
-        return col;
-      });
-
-      batch.update(userDocRef, { flashcards: updatedCollections });
-
-      const oldCollectionRef = collection(userDocRef, selectedCollection);
-      const newCollectionRef = collection(userDocRef, newCollectionName);
-
-      const colSnap = await getDocs(oldCollectionRef);
-
-      colSnap.forEach((document) => {
-        const newDocRef = doc(newCollectionRef, document.id);
-        batch.set(newDocRef, document.data());
-      });
-
-      colSnap.forEach((document) => {
-        batch.delete(document.ref);
-      });
-
-      await batch.commit();
-
-      setCollections(
-        updatedCollections.map((col: Collection) => {
-          const existing = collections.find((c) => c.name === col.name);
-          return {
-            ...col,
-            questionCount: existing ? existing.questionCount : 0,
-          };
-        })
-      );
-      handleCloseModal();
-      window.location.reload();
-    } else {
-      console.error("Document does not exist!");
-    }
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleDeleteCollection = async () => {
-    if (!user || !selectedCollection) return;
+  const handleSaveCollectionName = async () => {
+    if (!user || !selectedCollection || !newCollectionName.trim()) return;
 
     try {
       const userDocRef = doc(collection(db, "users"), user.id);
       const docSnap = await getDoc(userDocRef);
 
       if (docSnap.exists()) {
+        const batch = writeBatch(db);
         const userCollections: Collection[] = docSnap.data().flashcards || [];
 
-        const updatedCollections = userCollections.filter(
-          (col: Collection) => col.name !== selectedCollection
-        );
-
-        await updateDoc(userDocRef, { flashcards: updatedCollections });
-
-        const collectionRef = collection(userDocRef, selectedCollection);
-        const colSnap = await getDocs(collectionRef);
-
-        const batch = writeBatch(db);
-
-        colSnap.forEach((doc) => {
-          batch.delete(doc.ref);
+        // Update collections array first
+        const updatedCollections = userCollections.map((col: Collection) => {
+          if (col.name === selectedCollection) {
+            return { ...col, name: newCollectionName };
+          }
+          return col;
         });
 
-        await batch.commit();
-
+        // Update state optimistically
         setCollections(
           updatedCollections.map((col: Collection) => {
-            const existing = collections.find((c) => c.name === col.name);
+            const existing = collections.find((c) => c.name === (col.name === selectedCollection ? newCollectionName : col.name));
             return {
               ...col,
               questionCount: existing ? existing.questionCount : 0,
@@ -177,48 +130,115 @@ export default function CollectionsPage() {
           })
         );
 
-        await fetchCollections();
+        batch.update(userDocRef, { flashcards: updatedCollections });
+
+        const oldCollectionRef = collection(userDocRef, selectedCollection);
+        const newCollectionRef = collection(userDocRef, newCollectionName);
+
+        const colSnap = await getDocs(oldCollectionRef);
+
+        colSnap.forEach((document) => {
+          const newDocRef = doc(newCollectionRef, document.id);
+          batch.set(newDocRef, document.data());
+          batch.delete(document.ref);
+        });
+
+        await batch.commit();
+        handleCloseModal();
+
+      } else {
+        console.error("Document does not exist!");
+      }
+    } catch (error) {
+      console.error("Error updating collection:", error);
+      // Revert optimistic update on error
+      await fetchCollections();
+    }
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!user || !selectedCollection) return;
+
+    try {
+      // Optimistically update UI
+      setCollections(collections.filter(col => col.name !== selectedCollection));
+
+      const userDocRef = doc(collection(db, "users"), user.id);
+      const docSnap = await getDoc(userDocRef);
+
+      if (docSnap.exists()) {
+        const userCollections: Collection[] = docSnap.data().flashcards || [];
+        const updatedCollections = userCollections.filter(
+          (col: Collection) => col.name !== selectedCollection
+        );
+
+        const batch = writeBatch(db);
+        batch.update(userDocRef, { flashcards: updatedCollections });
+
+        const collectionRef = collection(userDocRef, selectedCollection);
+        const colSnap = await getDocs(collectionRef);
+
+        colSnap.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+
+        await batch.commit();
       }
 
       handleCloseModal();
     } catch (error) {
       console.error("Error deleting collection:", error);
+      // Revert optimistic update on error
+      await fetchCollections();
     }
   };
 
-  const handleShareCollection = async () => {
-    if (!user || !selectedCollection) return;
+  const handleShareCollection = async (collectionName: string) => {
+    if (!user) return;
   
     try {
       const userDocRef = doc(collection(db, "users"), user.id);
       const docSnap = await getDoc(userDocRef);
   
       if (docSnap.exists()) {
-        const collectionRef = collection(userDocRef, selectedCollection);
+        const collectionRef = collection(userDocRef, collectionName);
         const colSnap = await getDocs(collectionRef);
   
         if (colSnap.empty) {
-          alert("The selected collection has no flashcards to share!");
+          setSnackbar({
+            open: true,
+            message: "The selected collection has no flashcards to share!",
+            severity: "error"
+          });
           return;
         }
 
         const collections = docSnap.data().flashcards || [];
-        const collectionData = collections.find((c: Collection) => c.name === selectedCollection);
+        const collectionData = collections.find((c: Collection) => c.name === collectionName);
         const description = collectionData?.description || 'No description provided';
   
-        const hubRef = doc(collection(db, "hub"), `${user.id}_${selectedCollection}`);
+        const hubRef = doc(collection(db, "hub"), `${user.id}_${collectionName}`);
         await setDoc(hubRef, {
           userId: user.id,
-          collectionName: selectedCollection,
+          collectionName: collectionName,
           description: description,
           flashcardCount: colSnap.size,
           sharedAt: new Date(),
         });
   
-        alert("Collection shared successfully to the hub!");
+        setSnackbar({
+          open: true,
+          message: "Collection shared successfully to the hub!",
+          severity: "success"
+        });
       }
     } catch (error) {
       console.error("Error sharing collection:", error);
+      setSnackbar({
+        open: true,
+        message: "Error sharing collection. Please try again.",
+        severity: "error"
+      });
     }
   };
 
@@ -286,9 +306,9 @@ export default function CollectionsPage() {
                     key={index}
                     className="w-full bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-zinc-700 overflow-hidden"
                   >
-                    <Link href={`/flashcards/${col.name}`}>
-                      <div className="p-6 cursor-pointer">
-                        <div className="flex justify-between items-start">
+                    <div className="p-6 flex justify-between items-start">
+                      <Link href={`/flashcards/${col.name}`}>
+                        <div className="cursor-pointer">
                           <div className="space-y-1">
                             <h3 className="text-xl font-semibold text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400">
                               {col.name}
@@ -297,40 +317,32 @@ export default function CollectionsPage() {
                               {col.questionCount} {col.questionCount === 1 ? 'card' : 'cards'}
                             </p>
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleOpenModal(col.name);
-                              }}
-                              className="p-2 text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
-                            >
-                              <Pencil className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setSelectedCollection(col.name);
-                                handleShareCollection();
-                              }}
-                              className="p-2 text-gray-600 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
-                            >
-                              <Share className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setSelectedCollection(col.name);
-                                handleDeleteCollection();
-                              }}
-                              className="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </div>
                         </div>
+                      </Link>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleOpenModal(col.name)}
+                          className="p-2 text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                        >
+                          <Pencil className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleShareCollection(col.name)}
+                          className="p-2 text-gray-600 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                        >
+                          <Share className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedCollection(col.name);
+                            handleDeleteCollection();
+                          }}
+                          className="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
                       </div>
-                    </Link>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -370,6 +382,21 @@ export default function CollectionsPage() {
             </div>
           </div>
         </Modal>
+
+        <Snackbar 
+          open={snackbar.open} 
+          autoHideDuration={6000} 
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseSnackbar} 
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </div>
   );

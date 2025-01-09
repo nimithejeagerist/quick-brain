@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { db } from "@/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -64,6 +64,20 @@ export default function CommunityHub() {
       fetchHubCollections();
     }
   }, [isLoaded, isSignedIn, user, router]);
+
+  const removeFromHub = async (collectionName: string) => {
+    if (!user) return;
+    
+    try {
+      const hubDocRef = doc(db, "hub", collectionName);
+      await deleteDoc(hubDocRef);
+      
+      // Update local state to remove the collection
+      setCollections(collections.filter(c => c.name !== collectionName));
+    } catch (error) {
+      console.error("Error removing collection from hub:", error);
+    }
+  };
 
   // Filter collections based on active tab
   const displayedCollections = activeTab === 'public' 
@@ -146,15 +160,28 @@ export default function CommunityHub() {
                 </div>
               </Link>
               {activeTab === 'owned' && (
-                <button
-                  className="mt-4 w-full px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 dark:focus:ring-offset-zinc-800"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.location.href = `/flashcards/${collection.collectionName}`;
-                  }}
-                >
-                  Edit Collection
-                </button>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    className="flex-1 px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 dark:focus:ring-offset-zinc-800"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = `/flashcards/${collection.collectionName}`;
+                    }}
+                  >
+                    Edit Collection
+                  </button>
+                  <button
+                    className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-zinc-800"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (window.confirm('Are you sure you want to remove this collection from the hub?')) {
+                        removeFromHub(collection.name);
+                      }
+                    }}
+                  >
+                    Remove from Hub
+                  </button>
+                </div>
               )}
             </div>
           ))}
