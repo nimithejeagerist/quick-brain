@@ -4,8 +4,6 @@ import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import {
   Container,
-  Modal,
-  TextField,
   Snackbar,
   Alert
 } from "@mui/material";
@@ -19,7 +17,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import Link from "next/link";
-import { Pencil, Trash2, Share, Plus } from "lucide-react";
+import { Pencil, Trash2, Share, Plus, Check, X } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useRouter } from "next/navigation";
@@ -35,10 +33,7 @@ export default function CollectionsPage() {
   const router = useRouter();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(
-    null
-  );
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newCollectionName, setNewCollectionName] = useState<string>("");
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -83,15 +78,13 @@ export default function CollectionsPage() {
     fetchCollections();
   }, [user]);
 
-  const handleOpenModal = (collectionName: string) => {
-    setSelectedCollection(collectionName);
+  const handleStartEditing = (collectionName: string) => {
+    setEditingId(collectionName);
     setNewCollectionName(collectionName);
-    setModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedCollection(null);
+  const handleCancelEditing = () => {
+    setEditingId(null);
     setNewCollectionName("");
   };
 
@@ -99,8 +92,8 @@ export default function CollectionsPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleSaveCollectionName = async () => {
-    if (!user || !selectedCollection || !newCollectionName.trim()) return;
+  const handleSaveCollectionName = async (oldName: string) => {
+    if (!user || !newCollectionName.trim()) return;
 
     try {
       const userDocRef = doc(collection(db, "users"), user.id);
@@ -112,7 +105,7 @@ export default function CollectionsPage() {
 
         // Update collections array first
         const updatedCollections = userCollections.map((col: Collection) => {
-          if (col.name === selectedCollection) {
+          if (col.name === oldName) {
             return { ...col, name: newCollectionName };
           }
           return col;
@@ -121,7 +114,7 @@ export default function CollectionsPage() {
         // Update state optimistically
         setCollections(
           updatedCollections.map((col: Collection) => {
-            const existing = collections.find((c) => c.name === (col.name === selectedCollection ? newCollectionName : col.name));
+            const existing = collections.find((c) => c.name === (col.name === oldName ? newCollectionName : col.name));
             return {
               ...col,
               questionCount: existing ? existing.questionCount : 0,
@@ -131,7 +124,7 @@ export default function CollectionsPage() {
 
         batch.update(userDocRef, { flashcards: updatedCollections });
 
-        const oldCollectionRef = collection(userDocRef, selectedCollection);
+        const oldCollectionRef = collection(userDocRef, oldName);
         const newCollectionRef = collection(userDocRef, newCollectionName);
 
         const colSnap = await getDocs(oldCollectionRef);
@@ -143,7 +136,7 @@ export default function CollectionsPage() {
         });
 
         await batch.commit();
-        handleCloseModal();
+        setEditingId(null);
 
       } else {
         console.error("Document does not exist!");
@@ -155,12 +148,12 @@ export default function CollectionsPage() {
     }
   };
 
-  const handleDeleteCollection = async () => {
-    if (!user || !selectedCollection) return;
+  const handleDeleteCollection = async (collectionName: string) => {
+    if (!user) return;
 
     try {
       // Optimistically update UI
-      setCollections(collections.filter(col => col.name !== selectedCollection));
+      setCollections(collections.filter(col => col.name !== collectionName));
 
       const userDocRef = doc(collection(db, "users"), user.id);
       const docSnap = await getDoc(userDocRef);
@@ -168,13 +161,13 @@ export default function CollectionsPage() {
       if (docSnap.exists()) {
         const userCollections: Collection[] = docSnap.data().flashcards || [];
         const updatedCollections = userCollections.filter(
-          (col: Collection) => col.name !== selectedCollection
+          (col: Collection) => col.name !== collectionName
         );
 
         const batch = writeBatch(db);
         batch.update(userDocRef, { flashcards: updatedCollections });
 
-        const collectionRef = collection(userDocRef, selectedCollection);
+        const collectionRef = collection(userDocRef, collectionName);
         const colSnap = await getDocs(collectionRef);
 
         colSnap.forEach((doc) => {
@@ -183,8 +176,6 @@ export default function CollectionsPage() {
 
         await batch.commit();
       }
-
-      handleCloseModal();
     } catch (error) {
       console.error("Error deleting collection:", error);
       // Revert optimistic update on error
@@ -306,41 +297,64 @@ export default function CollectionsPage() {
                     className="w-full bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-zinc-700 overflow-hidden"
                   >
                     <div className="p-6 flex justify-between items-start">
-                      <Link href={`/flashcards/${col.name}`}>
-                        <div className="cursor-pointer">
-                          <div className="space-y-1">
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400">
-                              {col.name}
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {col.questionCount} {col.questionCount === 1 ? 'card' : 'cards'}
-                            </p>
-                          </div>
+                      {editingId === col.name ? (
+                        <div className="flex-1 flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={newCollectionName}
+                            onChange={(e) => setNewCollectionName(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 dark:bg-zinc-700 dark:text-white text-base"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleSaveCollectionName(col.name)}
+                            className="p-2 text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400"
+                          >
+                            <Check className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={handleCancelEditing}
+                            className="p-2 text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
                         </div>
-                      </Link>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleOpenModal(col.name)}
-                          className="p-2 text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
-                        >
-                          <Pencil className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleShareCollection(col.name)}
-                          className="p-2 text-gray-600 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
-                        >
-                          <Share className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedCollection(col.name);
-                            handleDeleteCollection();
-                          }}
-                          className="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
+                      ) : (
+                        <>
+                          <Link href={`/flashcards/${col.name}`}>
+                            <div className="cursor-pointer">
+                              <div className="space-y-1">
+                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400">
+                                  {col.name}
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {col.questionCount} {col.questionCount === 1 ? 'card' : 'cards'}
+                                </p>
+                              </div>
+                            </div>
+                          </Link>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleStartEditing(col.name)}
+                              className="p-2 text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                            >
+                              <Pencil className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleShareCollection(col.name)}
+                              className="p-2 text-gray-600 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                            >
+                              <Share className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCollection(col.name)}
+                              className="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -348,39 +362,6 @@ export default function CollectionsPage() {
             </div>
           )}
         </div>
-
-        <Modal 
-          open={modalOpen} 
-          onClose={handleCloseModal}
-          className="flex items-center justify-center p-4"
-        >
-          <div className="bg-white dark:bg-zinc-800 rounded-xl p-4 sm:p-6 w-full max-w-md">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-              Edit Collection
-            </h2>
-            <TextField
-              label="Collection Name"
-              fullWidth
-              value={newCollectionName}
-              onChange={(e) => setNewCollectionName(e.target.value)}
-              className="mb-6"
-            />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={handleCloseModal}
-                className="px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveCollectionName}
-                className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-sky-600 hover:bg-sky-700 text-white rounded-lg"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </Modal>
 
         <Snackbar 
           open={snackbar.open} 

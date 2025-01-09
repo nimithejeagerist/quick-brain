@@ -8,6 +8,7 @@ import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useSearchParams, useRouter } from "next/navigation";
+import { X } from "lucide-react";
 
 interface Collection {
   name: string;
@@ -141,8 +142,21 @@ export default function CommunityHub() {
           {displayedCollections.map((collection) => (
             <div 
               key={collection.name}
-              className="group bg-white dark:bg-zinc-800 p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-sky-100 dark:hover:border-sky-900"
+              className="group bg-white dark:bg-zinc-800 p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-sky-100 dark:hover:border-sky-900 relative"
             >
+              {activeTab === 'owned' && (
+                <button
+                  className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (window.confirm('Are you sure you want to remove this collection from the hub?')) {
+                      removeFromHub(collection.name);
+                    }
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
               <Link href={`/hub-flashcards/${collection.collectionName}?userId=${collection.userId}`} className="block">
                 <div className="space-y-4">
                   <h3 className="text-2xl font-semibold antialiased tracking-tight text-gray-900 dark:text-zinc-100 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
@@ -160,26 +174,15 @@ export default function CommunityHub() {
                 </div>
               </Link>
               {activeTab === 'owned' && (
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4">
                   <button
-                    className="flex-1 px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 dark:focus:ring-offset-zinc-800"
+                    className="w-full px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 dark:focus:ring-offset-zinc-800"
                     onClick={(e) => {
                       e.preventDefault();
                       window.location.href = `/flashcards/${collection.collectionName}`;
                     }}
                   >
                     Edit Collection
-                  </button>
-                  <button
-                    className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-zinc-800"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (window.confirm('Are you sure you want to remove this collection from the hub?')) {
-                        removeFromHub(collection.name);
-                      }
-                    }}
-                  >
-                    Remove from Hub
                   </button>
                 </div>
               )}

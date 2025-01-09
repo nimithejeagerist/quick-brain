@@ -156,6 +156,7 @@ export default function GenerateWithTextPage() {
             <li>&quot;Generate biology flashcards about cell organelles, including their functions and characteristics&quot;</li>
             <li>&quot;Make flashcards for Spanish vocabulary related to food and dining, including pronunciation guides&quot;</li>
           </ul>
+          <p className="mt-2 text-sm text-sky-800 dark:text-sky-200 italic">Try to be specific with your prompts for the best results.</p>
         </div>
 
         <TextArea

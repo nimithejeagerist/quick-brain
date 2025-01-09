@@ -1,13 +1,12 @@
 "use client";
 
 import { Button, Grid, Box, Typography } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import Flashcard from "@/components/Flashcard";
-import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X, Pencil, Trash2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -244,13 +243,13 @@ export default function FlashcardsPage({ params }: FlashcardsPageProps) {
                           onClick={() => handleOpenModal(flashcard)}
                           className="p-2 text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
                         >
-                          <Edit className="w-5 h-5" />
+                          <Pencil className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteFlashcard(flashcard.id!)}
                           className="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700"
                         >
-                          <Delete className="w-5 h-5" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
                     </div>
