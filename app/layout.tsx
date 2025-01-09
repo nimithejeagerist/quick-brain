@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     title: "QuickBrain - Smart Flashcard Learning",
     description: "Create and study flashcards efficiently with our intelligent system",
   },
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

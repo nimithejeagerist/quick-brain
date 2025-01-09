@@ -132,19 +132,19 @@ export default function GenerateWithTextPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <SyncLoader color={color} size={15} />
-          <p className="text-xl font-medium dark:text-white">Saving your flashcards...</p>
+          <p className="text-lg sm:text-xl font-medium dark:text-white">Saving your flashcards...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-4">
-      <div className="mt-6 mb-6 max-w-[80rem] mx-auto flex flex-col items-center">
-        <h3 className="mb-6 scroll-m-20 antialiased text-4xl font-bold tracking-tight 2xl:text-5xl">Generate Flashcards</h3>
+    <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mt-4 sm:mt-6 mb-4 sm:mb-6 max-w-[80rem] mx-auto flex flex-col items-center">
+        <h3 className="mb-4 sm:mb-6 text-center scroll-m-20 antialiased text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight 2xl:text-5xl px-2">Generate Flashcards</h3>
         
         {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-3 sm:p-4 bg-red-100 border border-red-400 text-red-700 rounded text-sm sm:text-base w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12">
             {error}
           </div>
         )}
@@ -154,18 +154,18 @@ export default function GenerateWithTextPage() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Enter text to generate flashcards"
           rows={5}
-          className="mb-4 ring ring-sky-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased w-9/12 2xl:w-full"
+          className="mb-4 ring ring-sky-600 ring-opacity-50 focus:ring-opacity-100 text-sm sm:text-base antialiased w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12"
         />
         <Button
-          className="bg-sky-700 hover:bg-sky-600 text-white w-1/2"
+          className="bg-sky-700 hover:bg-sky-600 text-white w-full sm:w-2/3 md:w-1/2"
           onClick={handleSubmit}
           disabled={!text.trim() || loading}
         >
-          <p className="text-base antialiased tracking-tight">Submit</p>
+          <p className="text-sm sm:text-base antialiased tracking-tight">Submit</p>
         </Button>
 
         {loading && (
-          <div className="flex justify-center items-center mt-20">
+          <div className="flex justify-center items-center mt-12 sm:mt-20">
             <SyncLoader
               color={color}
               loading={loading}
@@ -177,10 +177,10 @@ export default function GenerateWithTextPage() {
 
         {flashcards.length > 0 && (
           <>
-            <h2 className="mt-14 mb-2 antialiased text-3xl font-semibold tracking-tight">
+            <h2 className="mt-10 sm:mt-14 mb-2 antialiased text-2xl sm:text-3xl font-semibold tracking-tight text-center">
               Preview Your Flashcards
             </h2>
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4 sm:gap-5 w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12">
               {flashcards.map((flashcard, index) => (
                 <div key={index}>
                   <Preview flashcard={flashcard} />
@@ -188,7 +188,7 @@ export default function GenerateWithTextPage() {
               ))}
             </div>
 
-            <h3 className="mt-4 mb-2 antialiased text-2xl font-semibold tracking-tight">
+            <h3 className="mt-4 mb-2 antialiased text-xl sm:text-2xl font-semibold tracking-tight text-center">
               Flashcards generated! Save them below:
             </h3>
             <TextArea
@@ -196,25 +196,25 @@ export default function GenerateWithTextPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter a name for the collection (max 50 chars)"
               maxLength={50}
-              className="mb-4 ring ring-violet-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased"
+              className="mb-4 ring ring-violet-600 ring-opacity-50 focus:ring-opacity-100 text-sm sm:text-base antialiased w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12"
             />
             <TextArea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter a description for the collection (max 200 chars)"
               maxLength={200}
-              className="mb-4 ring ring-violet-600 ring-opacity-50 focus:ring-opacity-100 text-base antialiased"
+              className="mb-4 ring ring-violet-600 ring-opacity-50 focus:ring-opacity-100 text-sm sm:text-base antialiased w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12"
             />
-            <div className="flex gap-4 w-1/2">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-2/3 md:w-1/2">
               <Button
-                className="bg-violet-800 hover:bg-violet-700 text-white flex-1"
+                className="bg-violet-800 hover:bg-violet-700 text-white w-full sm:flex-1"
                 onClick={saveFlashcards}
                 disabled={!name || !flashcards.length || saving}
               >
-                <p className="text-base antialiased tracking-tight">Save Flashcards</p>
+                <p className="text-sm sm:text-base antialiased tracking-tight">Save Flashcards</p>
               </Button>
               <Button
-                className="bg-red-700 hover:bg-red-600 text-white flex-1"
+                className="bg-red-700 hover:bg-red-600 text-white w-full sm:flex-1"
                 onClick={() => {
                   setText('');
                   setName('');
@@ -223,7 +223,7 @@ export default function GenerateWithTextPage() {
                   setError('');
                 }}
               >
-                <p className="text-base antialiased tracking-tight">Clear All</p>
+                <p className="text-sm sm:text-base antialiased tracking-tight">Clear All</p>
               </Button>
             </div>
           </>
