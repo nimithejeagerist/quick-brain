@@ -7,7 +7,7 @@ import { collection, getDocs } from "firebase/firestore";
 import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface Collection {
   name: string;
@@ -18,6 +18,7 @@ interface Collection {
 }
 
 export default function CommunityHub() {
+  const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,11 @@ export default function CommunityHub() {
   const userId = searchParams.get('userId');
 
   useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+
     const fetchHubCollections = async () => {
       if (!user) return;
       
@@ -57,15 +63,19 @@ export default function CommunityHub() {
     if (isLoaded && isSignedIn) {
       fetchHubCollections();
     }
-  }, [isLoaded, isSignedIn, user]);
+  }, [isLoaded, isSignedIn, user, router]);
 
   // Filter collections based on active tab
   const displayedCollections = activeTab === 'public' 
     ? collections 
     : collections.filter(collection => collection.userId === user?.id);
 
-  if (!isLoaded || !isSignedIn) {
+  if (!isLoaded) {
     return null;
+  }
+
+  if (!isSignedIn) {
+    return null; // useEffect will handle redirect
   }
 
   return (
