@@ -29,7 +29,6 @@ export default function SignInPage() {
   return (
     <div className="flex flex-col justify-center items-center min-h-screen">
       <div className="w-full max-w-md px-4">
-        <h1 className="text-3xl font-bold text-center mb-8">Welcome Back!</h1>
         <SignIn 
           routing="path" 
           path="/sign-in" 
