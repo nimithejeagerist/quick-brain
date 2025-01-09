@@ -22,6 +22,7 @@ import Link from "next/link";
 import { Pencil, Trash2, Share, Plus } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { useRouter } from "next/navigation";
 
 interface Collection {
   name: string;
@@ -30,7 +31,8 @@ interface Collection {
 }
 
 export default function CollectionsPage() {
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,6 +45,13 @@ export default function CollectionsPage() {
     message: "",
     severity: "success" as "success" | "error"
   });
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-up");
+      return;
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   const fetchCollections = async () => {
     if (user) {
