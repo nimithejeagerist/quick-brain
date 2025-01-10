@@ -1,9 +1,29 @@
 import { NextResponse } from "next/server";
 import { ImageAnnotatorClient } from "@google-cloud/vision";
 
+const credentials = {
+    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    private_key: process.env.GOOGLE_PRIVATE_KEY,
+    project_id: process.env.GOOGLE_PROJECT_ID
+};
+
+// Debug log to check our credentials
+console.log('Credential check:', {
+    hasClientEmail: !!credentials.client_email,
+    hasPrivateKey: !!credentials.private_key,
+    hasProjectId: !!credentials.project_id,
+    // Log the first few characters of the private key to check format
+    privateKeyStart: credentials.private_key?.substring(0, 50)
+});
+
 // Initialize the Cloud Vision client
 const vision = new ImageAnnotatorClient({
-    keyFilename: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS || '{}'),
+    credentials: {
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        // Fix the double-escaped newlines
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        project_id: process.env.GOOGLE_PROJECT_ID
+    },
 });
 
 export async function POST(req: Request) {
@@ -18,6 +38,7 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
+        // Validate file size (10MB limit)
         if (imageFile.size > 10 * 1024 * 1024) {
             return NextResponse.json({
                 error: "File too large",
@@ -25,9 +46,11 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
+        // Convert File to Buffer
         const arrayBuffer = await imageFile.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
+        // Perform document text detection using Cloud Vision API
         const [result] = await vision.documentTextDetection(buffer);
         const fullTextAnnotation = result.fullTextAnnotation;
 
@@ -58,5 +81,3 @@ export async function POST(req: Request) {
         }, { status: 500 });
     }
 }
-
-
