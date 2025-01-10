@@ -8,7 +8,6 @@ import { collection, doc, getDoc, writeBatch } from "firebase/firestore";
 import Preview from "@/components/Preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createWorker } from "tesseract.js";
 import Image from "next/image";
 import { TextArea } from "@/components/ui/textarea";
 import SyncLoader from "react-spinners/SyncLoader";
@@ -28,8 +27,6 @@ export default function GenerateWithImagePage() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [loading, setLoading] = useState(false);
   const [imageData, setImageData] = useState<File | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [progressLabel, setProgressLabel] = useState("idle");
   const [flashcards, setFlashcards] = useState([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -46,25 +43,29 @@ export default function GenerateWithImagePage() {
   const handleExtract = async () => {
     if (!imageData) {
       setError("Please select an image first");
-      return;
+      return null;
     }
 
     try {
-      const worker = await createWorker("eng", 1,{
-        logger: (m) => {
-          setProgress(m.progress);
-          setProgressLabel(m.progress === 1 ? "done" : m.status);
-        },
+      const formData = new FormData();
+      formData.append('image', imageData);
+
+      const response = await fetch('/api/text-extraction', {
+        method: 'POST',
+        body: formData
       });
 
-      const { data: { text } } = await worker.recognize(imageData);
-      await worker.terminate();
-
-      if (!text.trim()) {
-        throw new Error("No text could be extracted from the image");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return text;
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data.text;
     } catch (error) {
       console.error("Error extracting text:", error);
       setError("Failed to extract text from image. Please try a different image.");
