@@ -20,10 +20,12 @@ console.log('Credential check:', {
 const vision = new ImageAnnotatorClient({
     credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        // Fix the double-escaped newlines
         private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
         project_id: process.env.GOOGLE_PROJECT_ID
     },
+    apiEndpoint: 'vision.googleapis.com',
+    fallback: 'rest',
+    projectId: process.env.GOOGLE_PROJECT_ID
 });
 
 export async function POST(req: Request) {
