@@ -33,6 +33,15 @@ Return the flashcards in this JSON format:
 Aim to create flashcards that will truly enhance understanding and long-term retention of the material.
 `;
 
+interface Flashcard {
+    front: string;
+    back: string;
+}
+
+interface FlashcardResponse {
+    flashcards: Flashcard[];
+}
+
 export async function POST(req: Request) {
     try {
         const { textGenerated } = await req.json();
@@ -68,20 +77,38 @@ export async function POST(req: Request) {
         }
 
         try {
-            const flashcards = JSON.parse(content);
+            const flashcards = JSON.parse(content) as FlashcardResponse;
             
+            if (!flashcards || typeof flashcards !== 'object') {
+                throw new Error("OpenAI response is not a valid JSON object");
+            }
+
             if (!flashcards.flashcards || !Array.isArray(flashcards.flashcards)) {
                 throw new Error("Invalid flashcard format returned");
             }
 
-            if (flashcards.flashcards.length !== 20) {
-                throw new Error("Incorrect number of flashcards generated");
+            console.log(`Received ${flashcards.flashcards.length} flashcards`);
+
+            const validFlashcards = flashcards.flashcards.every((card: Flashcard) => 
+                card && typeof card === 'object' &&
+                'front' in card && 'back' in card &&
+                typeof card.front === 'string' &&
+                typeof card.back === 'string'
+            );
+
+            if (!validFlashcards) {
+                throw new Error("Some flashcards are missing required fields or have invalid format");
             }
 
             return NextResponse.json(flashcards.flashcards);
         } catch (parseError) {
             console.error("JSON parsing error:", parseError);
-            throw new Error("Failed to parse generated flashcards");
+            console.error("Raw content received:", content);
+            return NextResponse.json({ 
+                error: "Failed to parse generated flashcards",
+                details: parseError instanceof Error ? parseError.message : "Unknown parsing error",
+                rawContent: content.substring(0, 500)
+            }, { status: 500 });
         }
 
     } catch (error) {
