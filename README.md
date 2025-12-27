@@ -3,7 +3,7 @@ A web-based flashcards platform designed to help students create, organize, and 
 
 QuickBrain was built as a practical exploration of learning workflows, UI-driven productivity tools, and AI-assisted content creation, rather than as a fully commercialized education product.
 ## Demo
-*(add demo video or GIF here)*
+https://github.com/user-attachments/assets/257528d6-9535-4c0e-85fa-ddf67e7987b1
 ## System Overview
 QuickBrain is built as a single full-stack web application with clearly separated concerns:
 - **Frontend (Next.js + Tailwind)**  
